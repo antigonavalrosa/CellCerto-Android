@@ -19,6 +19,12 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      - name: Manter assinatura de teste entre versões
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: cellcerto-android-debug-keystore-v1
+
       - name: Instalar Android 34
         run: |
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
