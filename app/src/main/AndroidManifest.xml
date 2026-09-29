@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:allowBackup="true"
@@ -9,6 +10,11 @@
         android:theme="@style/Theme.CellCerto"
         android:usesCleartextTraffic="false">
 
+        <activity android:name=".SettingsActivity" android:exported="false" />
+        <activity android:name=".NotificationCenterActivity" android:exported="false" />
+        <activity android:name=".PaymentSimulatorActivity" android:exported="false" />
+        <activity android:name=".WarrantyActivity" android:exported="false" />
+        <activity android:name=".TrackingActivity" android:exported="false" />
         <activity android:name=".HistoryActivity" android:exported="false" />
         <activity android:name=".InfoActivity" android:exported="false" />
         <activity android:name=".SummaryActivity" android:exported="false" />
