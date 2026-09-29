@@ -13,12 +13,6 @@ jobs:
       - name: Baixar código
         uses: actions/checkout@v4
 
-      - name: Montar vídeo de abertura
-        run: |
-          mkdir -p app/src/main/res/raw
-          cat video_parts/intro.txt | tr -d '\n\r' | base64 -d > app/src/main/res/raw/intro.mp4
-          ls -lh app/src/main/res/raw/intro.mp4
-
       - name: Configurar Java 17
         uses: actions/setup-java@v4
         with:
@@ -38,7 +32,7 @@ jobs:
       - name: Gerar APK
         run: gradle assembleDebug
 
-      - name: Salvar APK para download
+      - name: Salvar APK
         uses: actions/upload-artifact@v4
         with:
           name: CellCerto-APK
