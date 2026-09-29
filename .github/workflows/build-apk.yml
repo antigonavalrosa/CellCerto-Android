@@ -9,10 +9,15 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Baixar código
         uses: actions/checkout@v4
+
+      - name: Montar vídeo de abertura
+        run: |
+          mkdir -p app/src/main/res/raw
+          cat video_parts/part*.txt | tr -d '\n\r' | base64 -d > app/src/main/res/raw/intro.mp4
+          ls -lh app/src/main/res/raw/intro.mp4
 
       - name: Configurar Java 17
         uses: actions/setup-java@v4
@@ -20,12 +25,7 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Mostrar Android SDK
-        run: |
-          echo "ANDROID_HOME=$ANDROID_HOME"
-          ls "$ANDROID_HOME"
-
-      - name: Instalar plataforma Android 34
+      - name: Instalar Android 34
         run: |
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-34" "build-tools;34.0.0"
