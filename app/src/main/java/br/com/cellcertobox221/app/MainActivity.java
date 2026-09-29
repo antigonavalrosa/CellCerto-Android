@@ -17,7 +17,7 @@ public class MainActivity extends Activity {
     @Override protected void onCreate(Bundle b) {
         super.onCreate(b);
         getWindow().setStatusBarColor(Color.parseColor("#071820"));
-        getWindow().setNavigationBarColor(Color.parseColor("#F6FAFB"));
+        getWindow().setNavigationBarColor(Color.parseColor("#061923"));
 
         web = new WebView(this);
         web.setBackgroundColor(Color.parseColor("#F6FAFB"));
