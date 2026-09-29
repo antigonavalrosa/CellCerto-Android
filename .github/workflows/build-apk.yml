@@ -19,11 +19,19 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Manter assinatura de teste entre versões
+      - name: Restaurar assinatura de teste
         uses: actions/cache@v4
         with:
-          path: ~/.android/debug.keystore
-          key: cellcerto-android-debug-keystore-v1
+          path: /home/runner/.android/debug.keystore
+          key: cellcerto-android-debug-keystore-v2
+
+      - name: Criar assinatura de teste se necessário
+        run: |
+          mkdir -p /home/runner/.android
+          if [ ! -f /home/runner/.android/debug.keystore ]; then
+            keytool -genkeypair -v               -keystore /home/runner/.android/debug.keystore               -storepass android               -alias androiddebugkey               -keypass android               -keyalg RSA               -keysize 2048               -validity 10000               -dname "CN=CellCerto Debug, O=CellCerto Box 221, C=BR"
+          fi
+          keytool -list -keystore /home/runner/.android/debug.keystore -storepass android -alias androiddebugkey >/dev/null
 
       - name: Instalar Android 34
         run: |
