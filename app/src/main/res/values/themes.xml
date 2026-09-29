@@ -1,9 +1,9 @@
 <resources>
     <style name="Theme.CellCerto" parent="android:style/Theme.Material.Light.NoActionBar">
         <item name="android:fontFamily">sans</item>
-        <item name="android:colorAccent">#03B7D3</item>
-        <item name="android:navigationBarColor">#071926</item>
-        <item name="android:statusBarColor">#071926</item>
-        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:colorAccent">#0796AA</item>
+        <item name="android:navigationBarColor">#EEF0F2</item>
+        <item name="android:statusBarColor">#EEF0F2</item>
+        <item name="android:windowLightStatusBar">true</item>
     </style>
 </resources>
