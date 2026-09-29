@@ -10,8 +10,8 @@ android {
         applicationId 'br.com.cellcertobox221.app'
         minSdk 23
         targetSdk 34
-        versionCode 8
-        versionName '7.0.2'
+        versionCode 9
+        versionName '7.0.3'
     }
 
     buildTypes {
