@@ -26,7 +26,8 @@ public class AppFlowTest extends InstrumentationTestCase {
             if (ready(expr)) return;
             Thread.sleep(250);
         }
-        fail(message + ": " + js("document.getElementById('bookingError')?.textContent || document.getElementById('toast')?.textContent"));
+        screenshot("failure");
+        fail(message + ": " + js("JSON.stringify({page:document.querySelector('.page.active').id,error:document.getElementById('bookingError').textContent,toast:document.getElementById('toast').textContent,jsError:window._qaError,service:selectedService,time:selectedTime,sending:bookingSending,pending:nativePending.size})"));
     }
     private void screenshot(String name) throws Exception {
         Thread.sleep(500);
@@ -42,6 +43,7 @@ public class AppFlowTest extends InstrumentationTestCase {
         activity = getInstrumentation().startActivitySync(intent);
         getInstrumentation().runOnMainSync(() -> web = (WebView)((ViewGroup)activity.findViewById(android.R.id.content)).getChildAt(0));
         await("typeof show==='function' && document.querySelectorAll('.service').length>0", "App did not load");
+        js("window.onerror=function(message){window._qaError=String(message)}");
         screenshot("home");
         js("show('reviews')");
         await("Array.from(document.querySelectorAll('#reviews img')).every(i=>i.complete&&i.naturalWidth>0)", "Review media missing");
@@ -49,7 +51,10 @@ public class AppFlowTest extends InstrumentationTestCase {
         js("show('works')");
         await("Array.from(document.querySelectorAll('#works img')).every(i=>i.complete&&i.naturalWidth>0)", "Work media missing");
         screenshot("works");
-        js("openCat('Celulares');document.querySelector('.service').click();document.getElementById('bookDate').value='2099-10-01';updateSlots();document.querySelector('.slot').click();goBookingStep(3);document.getElementById('bookName').value='TESTE_AUTOMATICO_CELLCERTO_1_0_3';document.getElementById('bookPhone').value='00000000000';document.getElementById('bookObs').value='Registro temporário criado pelo teste Android e removido após validação';reviewBooking();document.getElementById('confirmBooking').click()");
+        js("openCat('Celulares');document.querySelector('.service').click();document.getElementById('bookDate').value='2099-10-01';updateSlots();document.querySelector('.slot').click();goBookingStep(3);document.getElementById('bookName').value='TESTE_AUTOMATICO_CELLCERTO_1_0_3';document.getElementById('bookPhone').value='00000000000';document.getElementById('bookObs').value='Registro temporário criado pelo teste Android e removido após validação';reviewBooking()");
+        assertTrue("Review is not visible: " + js("document.getElementById('toast').textContent"), ready("!document.getElementById('bookingReview').classList.contains('hidden')"));
+        screenshot("booking-review");
+        js("document.getElementById('confirmBooking').click()");
         await("document.getElementById('tracking').classList.contains('active') && localStorage.getItem('cc_last_protocol')", "Real booking failed");
         await("document.getElementById('trackResult').textContent.includes('TESTE_AUTOMATICO_CELLCERTO_1_0_3')", "Real tracking failed");
         android.util.Log.i("CellCertoTest", "PASS_REAL_BOOKING_PROTOCOL=" + new JSONTokener(js("localStorage.getItem('cc_last_protocol')")).nextValue());
