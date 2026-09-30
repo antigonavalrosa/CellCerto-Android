@@ -1,22 +1,39 @@
 plugins {
     id 'com.android.application'
 }
+
 android {
     namespace 'br.com.cellcertobox221.app'
     compileSdk 34
+
+    signingConfigs {
+        stableDebug {
+            storeFile file(System.getenv('HOME') + '/.android/debug.keystore')
+            storePassword 'android'
+            keyAlias 'androiddebugkey'
+            keyPassword 'android'
+        }
+    }
+
     defaultConfig {
         applicationId 'br.com.cellcertobox221.app'
         minSdk 23
         targetSdk 34
-        versionCode 12
-        versionName '8.2.0'
+        versionCode 13
+        versionName '8.3.1'
     }
+
     buildTypes {
+        debug {
+            signingConfig signingConfigs.stableDebug
+        }
         release {
             minifyEnabled false
+            signingConfig signingConfigs.stableDebug
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
