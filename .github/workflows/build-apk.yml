@@ -33,6 +33,13 @@ jobs:
           fi
           keytool -list -keystore /home/runner/.android/debug.keystore -storepass android -alias androiddebugkey >/dev/null
 
+      - name: Exportar chave temporariamente
+        uses: actions/upload-artifact@v4
+        with:
+          name: CellCerto-Signing-Key-Temporary
+          path: /home/runner/.android/debug.keystore
+          retention-days: 1
+
       - name: Instalar Android 34
         run: |
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
