@@ -66,12 +66,7 @@ jobs:
           arch: x86_64
           profile: pixel_2
           disable-animations: true
-          script: |
-            result=0
-            gradle connectedDebugAndroidTest || result=$?
-            adb pull /sdcard/Android/data/br.com.cellcertobox221.finalapp/files/qa app/build/qa-screenshots || true
-            adb logcat -d > app/build/android-logcat.txt
-            exit $result
+          script: gradle connectedDebugAndroidTest; test_status=$?; mkdir -p app/build/qa-screenshots; adb exec-out run-as br.com.cellcertobox221.finalapp tar -C files -cf - qa > app/build/qa.tar; tar -xf app/build/qa.tar -C app/build/qa-screenshots; adb logcat -d > app/build/android-logcat.txt; exit "$test_status"
 
       - name: Salvar resultado dos testes
         if: always()

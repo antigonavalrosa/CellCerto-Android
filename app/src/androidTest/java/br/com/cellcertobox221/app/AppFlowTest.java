@@ -31,7 +31,7 @@ public class AppFlowTest extends InstrumentationTestCase {
     }
     private void screenshot(String name) throws Exception {
         Thread.sleep(500);
-        java.io.File dir = new java.io.File(activity.getExternalFilesDir(null), "qa");
+        java.io.File dir = new java.io.File(getInstrumentation().getTargetContext().getFilesDir(), "qa");
         dir.mkdirs();
         android.graphics.Bitmap image = getInstrumentation().getUiAutomation().takeScreenshot();
         try (java.io.FileOutputStream out = new java.io.FileOutputStream(new java.io.File(dir, name + ".png"))) { image.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, out); }
@@ -55,7 +55,7 @@ public class AppFlowTest extends InstrumentationTestCase {
         assertTrue("Review is not visible: " + js("document.getElementById('toast').textContent"), ready("!document.getElementById('bookingReview').classList.contains('hidden')"));
         screenshot("booking-review");
         js("document.getElementById('confirmBooking').click()");
-        await("document.getElementById('tracking').classList.contains('active') && localStorage.getItem('cc_last_protocol')", "Real booking failed");
+        await("document.getElementById('tracking').classList.contains('active') && !!localStorage.getItem('cc_last_protocol')", "Real booking failed");
         await("document.getElementById('trackResult').textContent.includes('TESTE_AUTOMATICO_CELLCERTO_1_0_3')", "Real tracking failed");
         android.util.Log.i("CellCertoTest", "PASS_REAL_BOOKING_PROTOCOL=" + new JSONTokener(js("localStorage.getItem('cc_last_protocol')")).nextValue());
         screenshot("tracking");

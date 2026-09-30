@@ -179,6 +179,7 @@ public class MainActivity extends Activity {
                     }
                     respond(id, status, new String(buffer.toByteArray(), StandardCharsets.UTF_8));
                 } catch (Exception e) {
+                    android.util.Log.w("CellCertoApi", "Falha na conexão com a API", e);
                     respond(id, 0, "{\"error\":\"Não foi possível conectar. Verifique sua internet e tente novamente.\"}");
                 } finally { if (connection != null) connection.disconnect(); }
             });
