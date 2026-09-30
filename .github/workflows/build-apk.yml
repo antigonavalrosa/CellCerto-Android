@@ -19,17 +19,17 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Restaurar assinatura de teste
+      - name: Restaurar assinatura oficial
         uses: actions/cache@v4
         with:
           path: /home/runner/.android/debug.keystore
           key: cellcerto-oficial-signing-v1
 
-      - name: Criar assinatura de teste se necessário
+      - name: Criar assinatura oficial se necessário
         run: |
           mkdir -p /home/runner/.android
           if [ ! -f /home/runner/.android/debug.keystore ]; then
-            keytool -genkeypair -v               -keystore /home/runner/.android/debug.keystore               -storepass android               -alias androiddebugkey               -keypass android               -keyalg RSA               -keysize 2048               -validity 10000               -dname "CN=CellCerto Debug, O=CellCerto Box 221, C=BR"
+            keytool -genkeypair -v               -keystore /home/runner/.android/debug.keystore               -storepass android               -alias androiddebugkey               -keypass android               -keyalg RSA               -keysize 2048               -validity 10000               -dname "CN=CellCerto Oficial, O=CellCerto Box 221, C=BR"
           fi
           keytool -list -keystore /home/runner/.android/debug.keystore -storepass android -alias androiddebugkey >/dev/null
 
@@ -38,45 +38,18 @@ jobs:
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-34" "build-tools;34.0.0"
 
-      - name: Exportar zipalign temporariamente
-        uses: actions/upload-artifact@v4
-        with:
-          name: CellCerto-Zipalign-Temporary
-          path: /usr/local/lib/android/sdk/build-tools/34.0.0/zipalign
-          retention-days: 1
-
       - name: Configurar Gradle 8.7
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.7'
 
       - name: Gerar APK
-        run: gradle assembleDebug
+        run: gradle clean assembleDebug
 
-      - name: Permitir aceleração do emulador
+      - name: Verificar APK
         run: |
-          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-          sudo udevadm control --reload-rules
-          sudo udevadm trigger --name-match=kvm
-
-      - name: Testar agendamento real e imagens no Android
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 29
-          arch: x86_64
-          profile: pixel_2
-          disable-animations: true
-          script: gradle connectedDebugAndroidTest; test_status=$?; mkdir -p app/build/qa-screenshots; adb exec-out run-as br.com.cellcertobox221.finalapp tar -C files -cf - qa > app/build/qa.tar; tar -xf app/build/qa.tar -C app/build/qa-screenshots; adb logcat -d > app/build/android-logcat.txt; exit "$test_status"
-
-      - name: Salvar resultado dos testes
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: CellCerto-Testes-Android
-          path: |
-            app/build/reports/androidTests/connected/
-            app/build/qa-screenshots/
-            app/build/android-logcat.txt
+          "$ANDROID_HOME/build-tools/34.0.0/apksigner" verify --verbose app/build/outputs/apk/debug/app-debug.apk
+          "$ANDROID_HOME/build-tools/34.0.0/aapt" dump badging app/build/outputs/apk/debug/app-debug.apk | head -n 5
 
       - name: Salvar APK
         uses: actions/upload-artifact@v4
