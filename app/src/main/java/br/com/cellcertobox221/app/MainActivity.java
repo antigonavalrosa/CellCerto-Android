@@ -20,12 +20,24 @@ import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import java.io.IOException;
 import java.net.URLConnection;
+import java.net.URL;
+import java.net.HttpURLConnection;
+import java.io.InputStream;
+import java.io.ByteArrayOutputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import org.json.JSONObject;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 public class MainActivity extends Activity {
     private WebView web;
+    private final ExecutorService requests = Executors.newFixedThreadPool(3);
+    private volatile boolean destroyed;
+    private static final String API_URL = "https://zivhasnreefkpcqtwysq.supabase.co/functions/v1/cellcerto-api";
+    private static final String API_KEY = "sb_publishable_VR-MB3jqYDcKn6a44Sbrbg_jmkdnZXZ";
     private static final String CHANNEL_ID = "cellcerto_updates";
     private static final int REQ_NOTIFICATIONS = 221;
     private static final int REQ_LOCATION = 222;
@@ -34,6 +46,7 @@ public class MainActivity extends Activity {
 
     @Override protected void onCreate(Bundle b) {
         super.onCreate(b);
+        getWindow().getDecorView().setSystemUiVisibility(0);
         getWindow().setStatusBarColor(Color.parseColor("#051922"));
         getWindow().setNavigationBarColor(Color.parseColor("#051922"));
 
@@ -76,6 +89,9 @@ public class MainActivity extends Activity {
                 if (path == null || !path.startsWith("/assets/") || path.contains("..")) return new WebResourceResponse("text/plain", "UTF-8", null);
                 String asset = path.substring("/assets/".length());
                 String mime = URLConnection.guessContentTypeFromName(asset);
+                if (asset.endsWith(".webp")) mime = "image/webp";
+                if (asset.endsWith(".svg")) mime = "image/svg+xml";
+                if (asset.endsWith(".mp4")) mime = "video/mp4";
                 if (mime == null) mime = "application/octet-stream";
                 try { return new WebResourceResponse(mime, "UTF-8", getAssets().open(asset)); }
                 catch (IOException e) { return new WebResourceResponse("text/plain", "UTF-8", null); }
@@ -127,10 +143,57 @@ public class MainActivity extends Activity {
         ((NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE)).notify((int)(System.currentTimeMillis()%100000), b.build());
     }
 
+    private void respond(String id, int status, String body) {
+        runOnUiThread(() -> {
+            if (!destroyed && web != null) web.evaluateJavascript("window.nativeApiResult(" + JSONObject.quote(id) + "," + status + "," + JSONObject.quote(body) + ")", null);
+        });
+    }
+
     public class AndroidBridge {
+        @JavascriptInterface public void apiRequest(String id, String action, String payload, String token) {
+            if (destroyed || id == null || !id.matches("[0-9]+") || action == null || !action.matches("create_booking|lookup|my_bookings|admin_setup|admin_reset|admin_login|admin_list|admin_status|admin_logout")) return;
+            requests.execute(() -> {
+                HttpURLConnection connection = null;
+                try {
+                    connection = (HttpURLConnection) new URL(API_URL + "?action=" + action).openConnection();
+                    connection.setConnectTimeout(15000);
+                    connection.setReadTimeout(20000);
+                    connection.setInstanceFollowRedirects(false);
+                    connection.setRequestMethod("POST");
+                    connection.setRequestProperty("Content-Type", "application/json");
+                    connection.setRequestProperty("apikey", API_KEY);
+                    if (token != null && !token.isEmpty()) connection.setRequestProperty("x-admin-token", token);
+                    connection.setDoOutput(true);
+                    byte[] bytes = payload.getBytes(StandardCharsets.UTF_8);
+                    connection.setFixedLengthStreamingMode(bytes.length);
+                    try (java.io.OutputStream output = connection.getOutputStream()) { output.write(bytes); }
+                    int status = connection.getResponseCode();
+                    InputStream stream = status >= 400 ? connection.getErrorStream() : connection.getInputStream();
+                    ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+                    if (stream != null) try (InputStream input = stream) {
+                        byte[] chunk = new byte[4096]; int read;
+                        while ((read = input.read(chunk)) != -1) {
+                            buffer.write(chunk, 0, read);
+                            if (buffer.size() > 2 * 1024 * 1024) throw new IOException("Resposta muito grande");
+                        }
+                    }
+                    respond(id, status, new String(buffer.toByteArray(), StandardCharsets.UTF_8));
+                } catch (Exception e) {
+                    respond(id, 0, "{\"error\":\"Não foi possível conectar. Verifique sua internet e tente novamente.\"}");
+                } finally { if (connection != null) connection.disconnect(); }
+            });
+        }
+
         @JavascriptInterface public void notify(String title, String body) {
             runOnUiThread(() -> postNotification(title, body));
         }
+    }
+
+    @Override protected void onDestroy() {
+        destroyed = true;
+        requests.shutdownNow();
+        if (web != null) { web.removeJavascriptInterface("Android"); web.destroy(); web = null; }
+        super.onDestroy();
     }
 
     @Override public void onBackPressed() {
