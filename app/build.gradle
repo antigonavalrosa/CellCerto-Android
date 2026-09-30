@@ -4,9 +4,6 @@ plugins {
 
 android {
     namespace 'br.com.cellcertobox221.app'
-    useLibrary 'android.test.runner'
-    useLibrary 'android.test.base'
-    useLibrary 'android.test.mock'
     compileSdk 34
 
     signingConfigs {
@@ -19,12 +16,11 @@ android {
     }
 
     defaultConfig {
-        applicationId 'br.com.cellcertobox221.finalapp'
+        applicationId 'br.com.cellcertobox221.oficial'
         minSdk 23
         targetSdk 34
-        versionCode 4
-        versionName '1.0.3'
-        testInstrumentationRunner 'android.test.InstrumentationTestRunner'
+        versionCode 1
+        versionName '1.0.0'
     }
 
     buildTypes {
