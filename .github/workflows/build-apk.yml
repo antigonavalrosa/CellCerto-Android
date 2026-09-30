@@ -23,7 +23,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: /home/runner/.android/debug.keystore
-          key: cellcerto-android-debug-keystore-v2
+          key: cellcerto-oficial-signing-v1
 
       - name: Criar assinatura de teste se necessário
         run: |
@@ -81,5 +81,5 @@ jobs:
       - name: Salvar APK
         uses: actions/upload-artifact@v4
         with:
-          name: CellCerto-APK
+          name: CellCerto-Oficial-APK
           path: app/build/outputs/apk/debug/app-debug.apk
